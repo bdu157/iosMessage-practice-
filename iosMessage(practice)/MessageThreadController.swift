@@ -21,7 +21,7 @@ class MessageThreadController {
     static let baseURL = URL(string: "https://message-board-b0673.firebaseio.com/")!
     
     func createMessageThread(title: String, completion:@escaping (Error?)-> Void) {
-        let messageThread  = MessageThread.init(title: "title")
+        let messageThread  = MessageThread.init(title: title)
         
         let createMURL = MessageThreadController.baseURL.appendingPathComponent(messageThread.identifier).appendingPathExtension("json")
         
@@ -48,7 +48,34 @@ class MessageThreadController {
         }.resume()
     }
     
-    
+    func fetchMessageThreads(completion:@escaping (Error?) -> Void) {
+        let url = MessageThreadController.baseURL.appendingPathExtension("json")
+        
+        URLSession.shared.dataTask(with: url) { (data, _, error) in
+            if let error = error {
+                print(error)
+                completion(error)
+                return
+            }
+            
+            guard let data = data else {
+                completion(error)
+                return
+            }
+            
+            let jsonDecoder = JSONDecoder()
+           
+            do {
+                let jsonData = try jsonDecoder.decode([String: MessageThread].self, from: data)
+                self.messageThreads = jsonData.map{$0.value}
+                completion(nil)
+            } catch {
+                print(error)
+                completion(error)
+                return
+            }
+        }.resume()
+    }
     
     
     
